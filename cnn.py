@@ -43,15 +43,19 @@ class SimpleCNN(nn.Module):
         return x
 
 if __name__ == "__main__":
-            
-    # quant_mode = 'calib'
-    quant_mode = 'test'
+
+    # user options
+    parser = argparse.ArgumentParser(usage=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-q", "--quant_mode", help="quant_mode (calib, test)", default="calib")
+    ops = parser.parse_args()
+    
+    # quant_mode = ops.quant_mode
 
     # create an instance model
     model = SimpleCNN() 
 
     # create test inputs
-    batch_size = 1 if quant_mode == "test" else 10
+    batch_size = 1 if ops.quant_mode == "test" else 10
     x = torch.ones(batch_size,13,21)
     y = torch.ones(batch_size,1)
 
@@ -63,7 +67,7 @@ if __name__ == "__main__":
 
     # nndct_macs, nndct_params = summary.model_complexity(model, input, return_flops=False, readable=False, print_model_analysis=True)
     quant_dir = "./quant_dir"
-    quantizer = torch_quantizer(quant_mode, model, (input_shape), output_dir = quant_dir, device=device)
+    quantizer = torch_quantizer(ops.quant_mode, model, (input_shape), output_dir = quant_dir, device=device)
     quant_model = quantizer.quant_model
     
     # quick test evaluate
@@ -72,10 +76,10 @@ if __name__ == "__main__":
     p = quant_model(x)
 
     # "calib" step.
-    if quant_mode == "calib":
+    if ops.quant_mode == "calib":
         print("calib")
         quantizer.export_quant_config()
-    elif quant_mode == "test":
+    elif ops.quant_mode == "test":
         print("test")
         # "deploy" step.The Xilinx scripts don't do all these things at once.
         quantizer.export_xmodel(quant_dir, deploy_check=True)
