@@ -66,12 +66,10 @@ if __name__ == "__main__":
     quantizer = torch_quantizer(quant_mode, model, (input_shape), output_dir = quant_dir, device=device)
     quant_model = quantizer.quant_model
     
-    print("hi")
     # quick test evaluate
     # quant_model.eval()
     # with torch.no_grad():
     p = quant_model(x)
-    print("bye")
 
     # "calib" step.
     if quant_mode == "calib":
