@@ -1,1 +1,4 @@
-quantdir
+# folder names
+compiled/
+quant_dir/
+quantize_result/

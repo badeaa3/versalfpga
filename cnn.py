@@ -1,3 +1,6 @@
+# notes
+# 1. To get the xmodel first run with quant_mode="config" then again with "test"
+
 # vitis ai imports
 import pytorch_nndct
 from pytorch_nndct.apis import torch_quantizer
@@ -41,12 +44,16 @@ class SimpleCNN(nn.Module):
 
 if __name__ == "__main__":
             
+    # quant_mode = 'calib'
+    quant_mode = 'test'
+
     # create an instance model
     model = SimpleCNN() 
 
     # create test inputs
-    x = torch.ones(10,13,21)
-    y = torch.ones(10,1)
+    batch_size = 1 if quant_mode == "test" else 10
+    x = torch.ones(batch_size,13,21)
+    y = torch.ones(batch_size,1)
 
     # Inspect the model.
     input_shape = x[0]
@@ -56,19 +63,23 @@ if __name__ == "__main__":
 
     # nndct_macs, nndct_params = summary.model_complexity(model, input, return_flops=False, readable=False, print_model_analysis=True)
     quant_dir = "./quant_dir"
-    quant_mode = 'calib'
     quantizer = torch_quantizer(quant_mode, model, (input_shape), output_dir = quant_dir, device=device)
-    model = quantizer.quant_model
+    quant_model = quantizer.quant_model
     
+    print("hi")
     # quick test evaluate
-    model.eval()
-    with torch.no_grad():
-        p = model(x)
+    # quant_model.eval()
+    # with torch.no_grad():
+    p = quant_model(x)
+    print("bye")
 
     # "calib" step.
-    quantizer.export_quant_config()
-
-    # "deploy" step. The Xilinx scripts don't do all these things at once.
-    quantizer.export_xmodel(quant_dir, deploy_check=True)
-    quantizer.export_torch_script(output_dir=quant_dir)
-    quantizer.export_onnx_model(output_dir=quant_dir)
+    if quant_mode == "calib":
+        print("calib")
+        quantizer.export_quant_config()
+    elif quant_mode == "test":
+        print("test")
+        # "deploy" step.The Xilinx scripts don't do all these things at once.
+        quantizer.export_xmodel(quant_dir, deploy_check=True)
+        quantizer.export_torch_script(output_dir=quant_dir)
+        quantizer.export_onnx_model(output_dir=quant_dir)
